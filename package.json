@@ -1,0 +1,17 @@
+{
+    "name": "guess-game",
+    "private": true,
+    "version": "1.0.0",
+    "scripts": {
+      "server:build": "cd src/server/ && tsc app.ts --outDir ../../dist/server" ,
+      "server:start": "node ./dist/server/server/app.js",
+      "client:build": "cd src/client/ && tsc app.ts --outDir ../../dist/client",
+      "client:start": "node ./dist/client/client/app.js",
+      "build": "npm run server:build && npm run client:build"
+    },
+    "devDependencies": {
+      "@types/node": "20.11.10",
+      "typescript": "5.3.3"
+    }
+  }
+  
