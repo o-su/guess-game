@@ -1,22 +1,30 @@
+export enum MessageProperty {
+  Type = "type",
+  ClientId = "clientId",
+  Password = "password",
+}
+
+export const messageProperties = Object.values(MessageProperty)
+
 export type Message =
   | {
-      type: MessageType.HandshakeInitialization;
+      [MessageProperty.Type]: MessageType.HandshakeInitialization;
     }
   | {
-      type: MessageType.AuthenticationRequest;
-      password: string;
+      [MessageProperty.Type]: MessageType.AuthenticationRequest;
+      [MessageProperty.Password]: string;
     }
   | {
-      type: MessageType.AuthenticationSucceeded;
-      clientId: string;
+      [MessageProperty.Type]: MessageType.AuthenticationSucceeded;
+      [MessageProperty.ClientId]: string;
     }
   | {
-      type: MessageType.AuthenticationFailed;
+      [MessageProperty.Type]: MessageType.AuthenticationFailed;
     };
 
 export enum MessageType {
-  HandshakeInitialization = "HandshakeInitialization",
-  AuthenticationRequest = "AuthenticationRequest",
-  AuthenticationSucceeded = "AuthenticationSucceeded",
-  AuthenticationFailed = "AuthenticationFailed",
+  HandshakeInitialization,
+  AuthenticationRequest,
+  AuthenticationSucceeded,
+  AuthenticationFailed,
 }
