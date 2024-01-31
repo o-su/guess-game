@@ -1,4 +1,14 @@
 # Guess Game
+
+## Installation
+- install nodejs https://nodejs.org/en/download/package-manager#debian-and-ubuntu-based-linux-distributions
+```shell
+npm install
+npm run build
+npm run server:start
+npm run client:start
+```
+
 ## Assignment
 
 PROLOG:
