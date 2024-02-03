@@ -10,11 +10,7 @@ export class Client {
     this.client = new Socket();
   }
 
-  connect = async (host: string, port: number): Promise<void> => {
-    return new Promise((resolve) => {
-      this.client.connect(port, host, () => resolve());
-    });
-  };
+  connect = async (host: string, port: number): Promise<void> => new Promise((resolve) => this.client.connect(port, host, resolve));
 
   registerOnClose = (onClose: () => void) => this.client.on("close", onClose);
 
@@ -26,4 +22,6 @@ export class Client {
   sendMessage = (message: Message) => {
     this.client.write(encodeMessage(message));
   };
+
+  close = () => this.client.end();
 }

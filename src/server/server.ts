@@ -4,10 +4,14 @@ import { randomUUID } from "crypto";
 import { Message, MessageType } from "../common/types/messageTypes";
 import { decodeMessage, encodeMessage } from "../common/utils/messageUtils";
 
-export class Server {
-  private clients: { [clientId: string]: Socket } = {};
+export type Clients = {
+  [clientId: string]: Socket;
+};
 
-  run = (port: number, onData: (socket: Socket, message: Message) => void) => {
+export class Server {
+  private clients: Clients = {};
+
+  run = (port: number, onData: (message: Message, socket: Socket, clients: Clients, clientId: string) => void) => {
     this.clients = {};
 
     const server = createServer((socket) => {
@@ -20,11 +24,8 @@ export class Server {
         const message: Message = decodeMessage(data);
 
         if (clientId) {
-          onData(socket, message);
-        } else if (
-          !clientId &&
-          message.type === MessageType.AuthenticationRequest
-        ) {
+          onData(message, socket, this.clients, clientId);
+        } else if (!clientId && message.type === MessageType.Authentication) {
           const password = message.password;
 
           if (this.isValidPassword(password)) {
@@ -51,6 +52,8 @@ export class Server {
           delete this.clients[clientId];
         }
       });
+
+      socket.on("error", console.error);
     });
 
     server.listen(port, () => {
@@ -58,10 +61,9 @@ export class Server {
     });
   };
 
-  sendMessage = (socket: Socket, message: Message) =>
-    socket.write(encodeMessage(message));
+  sendMessage = (socket: Socket, message: Message) => socket.write(encodeMessage(message));
 
-  isValidPassword = (password: string): boolean => password === "secret";
+  private isValidPassword = (password: string): boolean => password === "secret";
 
-  generateClientId = (): string => randomUUID();
+  private generateClientId = (): string => randomUUID();
 }
