@@ -3,20 +3,10 @@ import { ConnectionType, Settings } from "../common/types/settingsTypes";
 import { parseAppSettings } from "../common/utils/settingsUtils";
 import { Client } from "./client";
 import { CommandLineApi, PrintColor } from "./cmdApi";
+import { menu } from "./menu";
 import { Command } from "./types";
 
 const settings = parseAppSettings();
-
-const menu = `
-Commands:
-  ${Command.Help}                           displays this menu
-  ${Command.Opponents}                      displays list of all available opponents
-  ${Command.Match} <opponentId> <guessWord> starts match with selected opponent
-  ${Command.Guess} <guessWord>              sends a guess to the opponent
-  ${Command.Hint} <hint>                    sends a hint to the opponent
-  ${Command.Surrender}                      ends the game with a loss
-  ${Command.Quit}                           quits application
-`;
 
 class App {
   private commandLineApi: CommandLineApi;
@@ -36,7 +26,7 @@ class App {
         this.commandLineApi.close();
       });
       this.client.registerOnMessage(this.processMessage);
-      this.commandLineApi.registerOnInput(this.handleInput);
+      this.commandLineApi.registerOnInput(this.processInput);
     } catch {
       console.error("Failed to connect.");
     }
@@ -107,7 +97,7 @@ class App {
 
   private displayHelp = () => this.commandLineApi.print(menu);
 
-  private handleInput = (input: string) => {
+  private processInput = (input: string) => {
     const inputParts = input.split(" ");
 
     if (inputParts.length > 0) {
@@ -133,7 +123,7 @@ class App {
               guessWord,
             });
           } else {
-            this.handleInputError();
+            this.processInputError();
           }
           break;
         case Command.Guess:
@@ -145,7 +135,7 @@ class App {
               guessWord,
             });
           } else {
-            this.handleInputError();
+            this.processInputError();
           }
           break;
         case Command.Hint:
@@ -157,11 +147,11 @@ class App {
               hint,
             });
           } else {
-            this.handleInputError();
+            this.processInputError();
           }
           break;
         default:
-          this.handleInputError();
+          this.processInputError();
           break;
         case Command.Surrender:
           this.client.sendMessage({
@@ -173,11 +163,11 @@ class App {
           process.exit();
       }
     } else {
-      this.handleInputError();
+      this.processInputError();
     }
   };
 
-  private handleInputError = () => {
+  private processInputError = () => {
     this.commandLineApi.print("Unknown command");
     this.displayHelp();
   };

@@ -29,18 +29,7 @@ export class Server {
         } else if (!clientId && message.type === MessageType.Authentication) {
           const password = message.password;
 
-          if (this.isValidPassword(password)) {
-            clientId = this.generateClientId();
-
-            this.clients[clientId] = socket;
-            this.sendMessage(socket, {
-              type: MessageType.AuthenticationSucceeded,
-              clientId,
-            });
-          } else {
-            this.sendMessage(socket, { type: MessageType.AuthenticationFailed });
-            socket.end();
-          }
+          clientId = this.authenticate(socket, password);
         } else {
           this.sendMessage(socket, { type: MessageType.HandshakeInitialization });
         }
@@ -65,6 +54,25 @@ export class Server {
       server.listen(settings.path, () => {
         console.log(`Server listening on path ${settings.path}`);
       });
+    }
+  };
+
+  authenticate = (socket: Socket, password: string): string | undefined => {
+    if (this.isValidPassword(password)) {
+      const clientId = this.generateClientId();
+
+      this.clients[clientId] = socket;
+      this.sendMessage(socket, {
+        type: MessageType.AuthenticationSucceeded,
+        clientId,
+      });
+
+      return clientId;
+    } else {
+      this.sendMessage(socket, { type: MessageType.AuthenticationFailed });
+      socket.end();
+
+      return undefined;
     }
   };
 

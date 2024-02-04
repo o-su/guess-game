@@ -6,14 +6,9 @@ import { Settings } from "../common/types/settingsTypes";
 import { parseAppSettings } from "../common/utils/settingsUtils";
 import { WebServer } from "./webServer";
 import { WebBuilder } from "./webBuilder";
+import { Match } from "./types";
 
 const settings = parseAppSettings();
-
-type Match = {
-  challengerId: string;
-  opponentId: string;
-  guessWord: string;
-};
 
 class App {
   private server: Server;
@@ -56,54 +51,10 @@ class App {
           });
           break;
         case MessageType.MatchStart:
-          const opponentConnected = clients.hasOwnProperty(message.opponentId);
-          const opponentAvailable = !this.matches.some(
-            (match) => match.challengerId === message.opponentId || match.opponentId === message.opponentId
-          );
-          const challengerAvailable = !this.matches.some((match) => match.challengerId === clientId || match.opponentId === clientId);
-
-          if (opponentConnected && opponentAvailable && challengerAvailable) {
-            this.matches.push({ challengerId: clientId, opponentId: message.opponentId, guessWord: message.guessWord });
-            this.server.sendMessage(socket, {
-              type: MessageType.MatchSucceeded,
-            });
-            this.server.sendMessage(clients[message.opponentId], {
-              type: MessageType.MatchAnnouncement,
-              challengerId: clientId,
-            });
-          } else {
-            this.server.sendMessage(socket, {
-              type: MessageType.MatchFailed,
-            });
-          }
-
+          this.startMatch(socket, clients, clientId, message.opponentId, message.guessWord);
           break;
         case MessageType.Guess:
-          const match = this.matches.find((match) => match.opponentId === clientId);
-
-          if (match) {
-            if (match.guessWord === message.guessWord) {
-              this.closeMatch(clientId);
-              this.server.sendMessage(socket, {
-                type: MessageType.Win,
-              });
-            } else {
-              this.server.sendMessage(socket, {
-                type: MessageType.BadAttempt,
-              });
-            }
-
-            this.server.sendMessage(clients[match.challengerId], {
-              type: MessageType.Progress,
-              guessWord: message.guessWord,
-            });
-          } else {
-            this.server.sendMessage(clients[clientId], {
-              type: MessageType.Error,
-              error: "Could not find a match.",
-            });
-          }
-
+          this.processGuess(socket, clients, clientId, message.guessWord);
           break;
         case MessageType.Hint:
           this.propagateHint(message.hint, clients, clientId);
@@ -119,6 +70,54 @@ class App {
           });
       }
     });
+  };
+
+  private startMatch = (socket: Socket, clients: Clients, clientId: string, opponentId: string, guessWord: string) => {
+    const opponentConnected = clients.hasOwnProperty(opponentId);
+    const opponentAvailable = !this.matches.some((match) => match.challengerId === opponentId || match.opponentId === opponentId);
+    const challengerAvailable = !this.matches.some((match) => match.challengerId === clientId || match.opponentId === clientId);
+
+    if (opponentConnected && opponentAvailable && challengerAvailable) {
+      this.matches.push({ challengerId: clientId, opponentId, guessWord });
+      this.server.sendMessage(socket, {
+        type: MessageType.MatchSucceeded,
+      });
+      this.server.sendMessage(clients[opponentId], {
+        type: MessageType.MatchAnnouncement,
+        challengerId: clientId,
+      });
+    } else {
+      this.server.sendMessage(socket, {
+        type: MessageType.MatchFailed,
+      });
+    }
+  };
+
+  private processGuess = (socket: Socket, clients: Clients, clientId: string, guessWord: string) => {
+    const match = this.matches.find((match) => match.opponentId === clientId);
+
+    if (match) {
+      if (match.guessWord === guessWord) {
+        this.closeMatch(clientId);
+        this.server.sendMessage(socket, {
+          type: MessageType.Win,
+        });
+      } else {
+        this.server.sendMessage(socket, {
+          type: MessageType.BadAttempt,
+        });
+      }
+
+      this.server.sendMessage(clients[match.challengerId], {
+        type: MessageType.Progress,
+        guessWord,
+      });
+    } else {
+      this.server.sendMessage(clients[clientId], {
+        type: MessageType.Error,
+        error: "Could not find a match.",
+      });
+    }
   };
 
   private closeMatch = (opponentId: string) => {
