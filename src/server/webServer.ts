@@ -25,7 +25,7 @@ export class WebServer {
     });
 
     server.listen(port, () => {
-      console.log(`Server running at http://localhost:${port}/`);
+      console.log(`Webserver running at http://localhost:${port}/`);
     });
   };
 }

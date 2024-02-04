@@ -40,7 +40,7 @@ class App {
       )
       .run(8080);
 
-    this.server.run(settings, (message: Message, socket: Socket, clients: Clients, clientId: string) => {
+    this.server.registerOnData((message: Message, socket: Socket, clients: Clients, clientId: string) => {
       switch (message.type) {
         case MessageType.Opponents:
           const opponentsIds = Object.keys(clients).filter(
@@ -72,6 +72,10 @@ class App {
           });
       }
     });
+    this.server.registerOnClose((clientId: string) => {
+      this.matches = this.matches.filter((match) => match.challengerId !== clientId && match.opponentId !== clientId);
+    });
+    this.server.run(settings);
   };
 
   private startMatch = (socket: Socket, clients: Clients, clientId: string, opponentId: string, guessWord: string) => {

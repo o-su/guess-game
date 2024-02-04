@@ -11,8 +11,18 @@ export type Clients = {
 
 export class Server {
   private clients: Clients = {};
+  private onData?: (message: Message, socket: Socket, clients: Clients, clientId: string) => void;
+  private onClose?: (clientId: string) => void;
 
-  run = (settings: Settings, onData: (message: Message, socket: Socket, clients: Clients, clientId: string) => void) => {
+  registerOnData = (onData: (message: Message, socket: Socket, clients: Clients, clientId: string) => void) => {
+    this.onData = onData;
+  };
+
+  registerOnClose = (onClose: (clientId: string) => void) => {
+    this.onClose = onClose;
+  };
+
+  run = (settings: Settings) => {
     this.clients = {};
 
     const server = createServer((socket) => {
@@ -24,8 +34,8 @@ export class Server {
       socket.on("data", (data: Buffer) => {
         const message: Message = decodeMessage(data);
 
-        if (clientId) {
-          onData(message, socket, this.clients, clientId);
+        if (clientId && this.onData) {
+          this.onData(message, socket, this.clients, clientId);
         } else if (!clientId && message.type === MessageType.Authentication) {
           const password = message.password;
 
@@ -40,6 +50,10 @@ export class Server {
 
         if (clientId) {
           delete this.clients[clientId];
+
+          if (this.onClose) {
+            this.onClose(clientId);
+          }
         }
       });
 
