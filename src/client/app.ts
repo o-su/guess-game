@@ -29,7 +29,7 @@ class App {
 
   run = async (settings: Settings) => {
     try {
-      await this.connect(settings)
+      await this.connect(settings);
       this.commandLineApi.print("Connected to server");
       this.client.registerOnClose(() => {
         this.commandLineApi.print("Connection closed");
@@ -38,17 +38,17 @@ class App {
       this.client.registerOnMessage(this.processMessage);
       this.commandLineApi.registerOnInput(this.handleInput);
     } catch {
-      console.error("Failed to connect.")
+      console.error("Failed to connect.");
     }
   };
 
   private connect = async (settings: Settings): Promise<void> => {
     if (settings.connectionType === ConnectionType.TCP) {
-      return this.client.connectTcp(settings.host, settings.port)
+      return this.client.connectTcp(settings.host, settings.port);
     } else {
-      return this.client.connectUnix(settings.path)
+      return this.client.connectUnix(settings.path);
     }
-  }
+  };
 
   private processMessage = (message: Message) => {
     switch (message.type) {
@@ -69,7 +69,11 @@ class App {
         this.commandLineApi.print("Invalid password. Connection closed.", PrintColor.Red);
         break;
       case MessageType.OpponentsResponse:
-        this.commandLineApi.print(`Available opponents: ${message.opponentsIds.join(",")}`);
+        if (message.opponentsIds.length > 0) {
+          this.commandLineApi.print(`Available opponents: ${message.opponentsIds.join(",")}`);
+        } else {
+          this.commandLineApi.print("There are no opponents available.", PrintColor.Red);
+        }
         break;
       case MessageType.MatchSucceeded:
         this.commandLineApi.print(`The opponent has accepted your challenge.`);
@@ -94,6 +98,9 @@ class App {
         break;
       case MessageType.BadAttempt:
         this.commandLineApi.print("Bad guess, try again", PrintColor.Red);
+        break;
+      case MessageType.Error:
+        this.commandLineApi.print(message.error, PrintColor.Red);
         break;
     }
   };

@@ -7,6 +7,7 @@ export enum MessageProperty {
   GuessWord = "guessWord",
   Hint = "hint",
   ChallengerId = "challengerId",
+  Error = "error"
 }
 
 export const messageProperties = Object.values(MessageProperty);
@@ -45,7 +46,8 @@ export type Message =
   | { [MessageProperty.Type]: MessageType.HintResponse; [MessageProperty.Hint]: string }
   | { [MessageProperty.Type]: MessageType.Win }
   | { [MessageProperty.Type]: MessageType.BadAttempt }
-  | { [MessageProperty.Type]: MessageType.Surrender };
+  | { [MessageProperty.Type]: MessageType.Surrender }
+  | { [MessageProperty.Type]: MessageType.Error; [MessageProperty.Error]: string };
 
 export enum MessageType {
   HandshakeInitialization,
@@ -66,4 +68,5 @@ export enum MessageType {
   BadAttempt,
   Surrender,
   Quit,
+  Error
 }

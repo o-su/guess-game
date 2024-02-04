@@ -37,8 +37,9 @@ class App {
           const opponentAvailable = !this.matches.some(
             (match) => match.challengerId === message.opponentId || match.opponentId === message.opponentId
           );
+          const challengerAvailable = !this.matches.some((match) => match.challengerId === clientId || match.opponentId === clientId);
 
-          if (opponentConnected && opponentAvailable) {
+          if (opponentConnected && opponentAvailable && challengerAvailable) {
             this.matches.push({ challengerId: clientId, opponentId: message.opponentId, guessWord: message.guessWord });
             this.server.sendMessage(socket, {
               type: MessageType.MatchSucceeded,
@@ -74,7 +75,10 @@ class App {
               guessWord: message.guessWord,
             });
           } else {
-            // TODO: error
+            this.server.sendMessage(clients[clientId], {
+              type: MessageType.Error,
+              error: "Could not find a match.",
+            });
           }
 
           break;
@@ -85,6 +89,11 @@ class App {
           this.propagateSurrender(clients, clientId);
           this.closeMatch(clientId);
           break;
+        default:
+          this.server.sendMessage(clients[clientId], {
+            type: MessageType.Error,
+            error: "Unknown command",
+          });
       }
     });
   };
@@ -102,7 +111,10 @@ class App {
         hint,
       });
     } else {
-      // TODO: error
+      this.server.sendMessage(clients[clientId], {
+        type: MessageType.Error,
+        error: "Could not find a match.",
+      });
     }
   };
 
@@ -114,7 +126,10 @@ class App {
         type: MessageType.Surrender,
       });
     } else {
-      // TODO: error
+      this.server.sendMessage(clients[clientId], {
+        type: MessageType.Error,
+        error: "Could not find a match.",
+      });
     }
   };
 }
