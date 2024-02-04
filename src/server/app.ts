@@ -4,6 +4,8 @@ import { Clients, Server } from "./server";
 import { Message, MessageType } from "../common/types/messageTypes";
 import { Settings } from "../common/types/settingsTypes";
 import { parseAppSettings } from "../common/utils/settingsUtils";
+import { WebServer } from "./webServer";
+import { WebBuilder } from "./webBuilder";
 
 const settings = parseAppSettings();
 
@@ -15,13 +17,34 @@ type Match = {
 
 class App {
   private server: Server;
+  private webServer: WebServer;
   private matches: Match[] = [];
 
-  constructor(server: Server) {
+  constructor(server: Server, webServer: WebServer) {
     this.server = server;
+    this.webServer = webServer;
   }
 
   run = (settings: Settings) => {
+    this.webServer
+      .registerOnRequest(() =>
+        new WebBuilder()
+          .addContent("<h1>Active Matches</h1>")
+          .addContent("<table>")
+          .addContent("<thead><tr><th>Challenger</th><th>Opponent</th><th>Guess Word</th></tr></thead>")
+          .addContent("<tbody>")
+          .addContent(
+            this.matches
+              .map((match) => `<tr><td>${match.challengerId}</td><td>${match.opponentId}</td><td>${match.guessWord}</td></tr>`)
+              .join("")
+          )
+          .addContent("</tbody>")
+          .addContent("</table>")
+
+          .build()
+      )
+      .run(8080);
+
     this.server.run(settings, (message: Message, socket: Socket, clients: Clients, clientId: string) => {
       switch (message.type) {
         case MessageType.Opponents:
@@ -135,6 +158,7 @@ class App {
 }
 
 const server = new Server();
-const app = new App(server);
+const webServer = new WebServer();
+const app = new App(server, webServer);
 
 app.run(settings);
