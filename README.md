@@ -1,13 +1,28 @@
 # Guess Game
 
 ## Installation
-- install nodejs https://nodejs.org/en/download/package-manager#debian-and-ubuntu-based-linux-distributions
+- install nodejs 18.17.0 https://nodejs.org/en/download/package-manager#debian-and-ubuntu-based-linux-distributions
+
 ```shell
 npm install
 npm run build
-npm run server:start
-npm run client:start
 ```
+
+## Usage
+
+### TCP Socket
+```shell
+npm run server:start connectionType=tcp host=127.0.0.1 port=4000
+npm run client:start connectionType=tcp host=127.0.0.1 port=4000
+```
+
+### Unix Socket
+```shell
+npm run server:start connectionType=unix path=/tmp/test
+npm run client:start connectionType=unix path=/tmp/test
+```
+
+Password: "secret"
 
 ## Assignment
 

@@ -1,10 +1,11 @@
 import { Message, MessageType } from "../common/types/messageTypes";
+import { ConnectionType, Settings } from "../common/types/settingsTypes";
+import { parseAppSettings } from "../common/utils/settingsUtils";
 import { Client } from "./client";
 import { CommandLineApi, PrintColor } from "./cmdApi";
 import { Command } from "./types";
 
-const host = "127.0.0.1";
-const port = 4000;
+const settings = parseAppSettings();
 
 const menu = `
 Commands:
@@ -26,15 +27,28 @@ class App {
     this.client = client;
   }
 
-  run = () => {
-    this.client.connect(host, port).then(() => this.commandLineApi.print("Connected to server"));
-    this.client.registerOnClose(() => {
-      this.commandLineApi.print("Connection closed");
-      this.commandLineApi.close();
-    });
-    this.client.registerOnMessage(this.processMessage);
-    this.commandLineApi.registerOnInput(this.handleInput);
+  run = async (settings: Settings) => {
+    try {
+      await this.connect(settings)
+      this.commandLineApi.print("Connected to server");
+      this.client.registerOnClose(() => {
+        this.commandLineApi.print("Connection closed");
+        this.commandLineApi.close();
+      });
+      this.client.registerOnMessage(this.processMessage);
+      this.commandLineApi.registerOnInput(this.handleInput);
+    } catch {
+      console.error("Failed to connect.")
+    }
   };
+
+  private connect = async (settings: Settings): Promise<void> => {
+    if (settings.connectionType === ConnectionType.TCP) {
+      return this.client.connectTcp(settings.host, settings.port)
+    } else {
+      return this.client.connectUnix(settings.path)
+    }
+  }
 
   private processMessage = (message: Message) => {
     switch (message.type) {
@@ -84,9 +98,7 @@ class App {
     }
   };
 
-  private displayHelp = () => {
-    this.commandLineApi.print(menu);
-  };
+  private displayHelp = () => this.commandLineApi.print(menu);
 
   private handleInput = (input: string) => {
     const inputParts = input.split(" ");
@@ -168,4 +180,4 @@ const commandLineApi = new CommandLineApi();
 const client = new Client();
 const app = new App(commandLineApi, client);
 
-app.run();
+app.run(settings);

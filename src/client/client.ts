@@ -10,7 +10,9 @@ export class Client {
     this.client = new Socket();
   }
 
-  connect = async (host: string, port: number): Promise<void> => new Promise((resolve) => this.client.connect(port, host, resolve));
+  connectTcp = async (host: string, port: number): Promise<void> => new Promise((resolve) => this.client.connect(port, host, resolve));
+
+  connectUnix = async (path: string): Promise<void> => new Promise((resolve) => this.client.connect(path, resolve));
 
   registerOnClose = (onClose: () => void) => this.client.on("close", onClose);
 

@@ -3,6 +3,7 @@ import { randomUUID } from "crypto";
 
 import { Message, MessageType } from "../common/types/messageTypes";
 import { decodeMessage, encodeMessage } from "../common/utils/messageUtils";
+import { ConnectionType, Settings } from "../common/types/settingsTypes";
 
 export type Clients = {
   [clientId: string]: Socket;
@@ -11,7 +12,7 @@ export type Clients = {
 export class Server {
   private clients: Clients = {};
 
-  run = (port: number, onData: (message: Message, socket: Socket, clients: Clients, clientId: string) => void) => {
+  run = (settings: Settings, onData: (message: Message, socket: Socket, clients: Clients, clientId: string) => void) => {
     this.clients = {};
 
     const server = createServer((socket) => {
@@ -56,9 +57,15 @@ export class Server {
       socket.on("error", console.error);
     });
 
-    server.listen(port, () => {
-      console.log(`Server listening on port ${port}`);
-    });
+    if (settings.connectionType === ConnectionType.TCP) {
+      server.listen(settings.port, settings.host, () => {
+        console.log(`Server listening on ${settings.host}:${settings.port}`);
+      });
+    } else {
+      server.listen(settings.path, () => {
+        console.log(`Server listening on path ${settings.path}`);
+      });
+    }
   };
 
   sendMessage = (socket: Socket, message: Message) => socket.write(encodeMessage(message));

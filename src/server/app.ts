@@ -2,8 +2,10 @@ import { Socket } from "net";
 
 import { Clients, Server } from "./server";
 import { Message, MessageType } from "../common/types/messageTypes";
+import { Settings } from "../common/types/settingsTypes";
+import { parseAppSettings } from "../common/utils/settingsUtils";
 
-const port = 4000;
+const settings = parseAppSettings();
 
 type Match = {
   challengerId: string;
@@ -19,8 +21,8 @@ class App {
     this.server = server;
   }
 
-  run = (port: number) => {
-    this.server.run(port, (message: Message, socket: Socket, clients: Clients, clientId: string) => {
+  run = (settings: Settings) => {
+    this.server.run(settings, (message: Message, socket: Socket, clients: Clients, clientId: string) => {
       switch (message.type) {
         case MessageType.Opponents:
           const opponentsIds = Object.keys(clients).filter((client) => client !== clientId);
@@ -120,4 +122,4 @@ class App {
 const server = new Server();
 const app = new App(server);
 
-app.run(port);
+app.run(settings);
