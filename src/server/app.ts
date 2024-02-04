@@ -43,7 +43,9 @@ class App {
     this.server.run(settings, (message: Message, socket: Socket, clients: Clients, clientId: string) => {
       switch (message.type) {
         case MessageType.Opponents:
-          const opponentsIds = Object.keys(clients).filter((client) => client !== clientId);
+          const opponentsIds = Object.keys(clients).filter(
+            (client) => client !== clientId && !this.matches.some((match) => match.challengerId === client || match.opponentId === client)
+          );
 
           this.server.sendMessage(socket, {
             type: MessageType.OpponentsResponse,
