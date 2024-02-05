@@ -2,10 +2,10 @@ import { TextDecoder, TextEncoder } from "util";
 
 import { Message, messageProperties } from "../types/messageTypes";
 
-export function encodeMessage(message: Message): Buffer {
+export function encodeMessage(message: Message): Uint8Array {
   const compressedDictionary = compressDictionary(message, messageProperties);
 
-  return Buffer.from(new TextEncoder().encode(JSON.stringify(compressedDictionary)));
+  return new TextEncoder().encode(JSON.stringify(compressedDictionary));
 }
 
 export function decodeMessage(data: Buffer): Message {
